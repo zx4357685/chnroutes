@@ -6,7 +6,8 @@ import os
 import re
 import subprocess
 import sys
-import urllib2
+import urllib.request
+import chardet
 
 def generate_ovpn(_):
     results = fetch_ip_data()
@@ -42,8 +43,8 @@ ip -batch - <<EOF
     upfile.close()
     downfile.close()
 
-    os.chmod('vpn-up.sh', 00755)
-    os.chmod('vpn-down.sh', 00755)
+    os.chmod('vpn-up.sh', 0o755)
+    os.chmod('vpn-down.sh', 0o755)
 
 def generate_old(metric):
     results = fetch_ip_data()
@@ -106,8 +107,8 @@ rm /tmp/vpn_oldgw
     upfile.close()
     downfile.close()
 
-    os.chmod('ip-pre-up', 00755)
-    os.chmod('ip-down', 00755)
+    os.chmod('ip-pre-up', 0o755)
+    os.chmod('ip-down', 0o755)
 
 def generate_mac(_):
     results = fetch_ip_data()
@@ -151,8 +152,8 @@ OLDGW=`cat /tmp/pptp_oldgw`
     upfile.close()
     downfile.close()
 
-    os.chmod('ip-up', 00755)
-    os.chmod('ip-down', 00755)
+    os.chmod('ip-up', 0o755)
+    os.chmod('ip-down', 0o755)
 
 def generate_win(metric):
     results = fetch_ip_data()
@@ -190,6 +191,8 @@ def fetch_ip_data():
 
     cnregex = re.compile(r'^apnic\|cn\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
                          re.I | re.M)
+    encode_type = chardet.detect(data)  
+    data = data.decode(encode_type['encoding'])
     cndata = cnregex.findall(data)
 
     results = []
@@ -202,7 +205,7 @@ def fetch_ip_data():
         imask = 0xffffffff ^ (num_ip - 1)
         imask = hex(imask)[2:]
 
-        mask = [imask[i:i + 2] for i in xrange(0, 8, 2)]
+        mask = [imask[i:i + 2] for i in range(0, 8, 2)]
         mask = '.'.join([str(int(i, 16)) for i in mask])
 
         cidr = 32 - int(math.log(num_ip, 2))
